@@ -22,7 +22,7 @@ func NewServer(port string, counter *counter.Counter) *Server {
 
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%s", port),
-		Handler: SetupRoutes(),
+		Handler: server.SetupRoutes(),
 	}
 	server.httpServer = httpServer
 	return &server
@@ -42,13 +42,41 @@ func (s *Server) Stop() error {
 	return s.httpServer.Shutdown(ctxShutDown)
 }
 
-func SetupRoutes() *gin.Engine {
+func (s *Server) SetupRoutes() *gin.Engine {
 	r := gin.Default()
 	// Define your routes here
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
-		})
-	})
+	r.GET("/health", s.handleHealth)
+	r.GET("/count", s.handleGetCount)
+	r.POST("/count/increment", s.handleIncrementCount)
+	r.GET("/peers", s.handleGetPeers)
+	r.POST("/discovery", s.handleDiscovery)
+	r.POST("/count/propagate", s.handlePropagateCount)
+
 	return r
+}
+
+func (s *Server) handleHealth(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"status": "ok",
+	})
+}
+
+func (s *Server) handleGetCount(c *gin.Context) {
+
+}
+
+func (s *Server) handleIncrementCount(c *gin.Context) {
+
+}
+
+func (s *Server) handleGetPeers(c *gin.Context) {
+
+}
+
+func (s *Server) handleDiscovery(c *gin.Context) {
+
+}
+
+func (s *Server) handlePropagateCount(c *gin.Context) {
+
 }
