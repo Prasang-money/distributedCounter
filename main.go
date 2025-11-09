@@ -11,6 +11,7 @@ import (
 
 	"github.com/Prasang-money/distributedCounter/internal/api"
 	"github.com/Prasang-money/distributedCounter/internal/counter"
+	"github.com/Prasang-money/distributedCounter/internal/discovery"
 )
 
 func main() {
@@ -32,10 +33,17 @@ func main() {
 			peers[i] = strings.TrimSpace(peer)
 		}
 	}
+	// Create a synchronization channel on joining the discovery and counter moduless
+	syncChan := make(chan int64, 1)
+	discovery := discovery.NewDiscovery(*nodeID, syncChan)
 
-	counter := counter.NewCounter()
+	if err := discovery.Start(peers); err != nil {
+		log.Fatalf("Failed to start discovery: %v", err)
+	}
+	counter := counter.NewCounter(discovery, syncChan)
+	server := api.NewServer(*port, counter, discovery)
 
-	server := api.NewServer(*port, counter)
+	log.Printf("Discovery service started with peers: %v", peers)
 
 	go func() {
 
@@ -50,6 +58,8 @@ func main() {
 
 	<-ctx.Done()
 	stop()
+	discovery.Stop()
+	counter.Stop()
 	if err := server.Stop(); err != nil {
 		log.Fatalf("server forced to shutdown: %v", err)
 	}
